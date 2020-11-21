@@ -1,0 +1,142 @@
+Jezik: JAVA
+
+Pokretavanje serverskog programa za simulaciju leta sadrži naziv klase i jedan parametar:
+ServerSimulatoraLeta datoteka[.txt | .xml | .bin | .json]
+
+Serverski program za simulaciju leta na početku provjerava postoji li datoteka konfiguracije te prekida rad
+ako ne postoji. Ako postoji, učitava postavke iz datoteke konfiguracije. Slijedi provjera da li su zauzeta zadana
+računalna vrata/port (postavka port.simulator). Ako su zauzeta, potrebno je ispisati poruku na konzolu i
+prekinuti rad programa. Ako nisu zauzeta, server kreira objekt za kolekciju letova aviona.
+Sljedeći korak je priprema dretve za prijem zahtjeva korisnika. Kreira se objekt klase ServerSocket na
+zadanim računalnim vratima/port-u (postavka port.simulator) s maksimalnim brojem zahtjeva na čekanju
+(postavka maks.cekaca). Zatim se u petlji čeka da se spoji korisnik. Izlaz iz petlje dobije se prekidom rada od
+strane korisnika (crtl/c) ili sustava. Nakon spajanja korisnika, kreira se dretva koja obrađuje zahtjev.
+Dretva iz dobivene veze na mrežnoj utičnici/socket-u preuzima tokove za ulazne i izlazne podatke prema
+korisniku. Na temelju ulaznih podataka provodi se analiza zahtjeva korisnika. Dozvoljene komande opisane
+su u posebnom dijelu za server simulacije leta. Ako sintaksa primljenog zahtjeva nije ispravna tada se
+korisniku vraća odgovor ERROR 20; tekst; (tekst objašnjava razlog pogreške).
+Server za simulaciju može primiti sljedeće komande od svog korisnika koji traži izvršavanja određene akcije:
+- LET icao24; POLIJETANJE yyyy.MM.dd HH:mm:ss; SLIJETANJE yyyy.MM.dd
+HH:mm:ss;
+◦ server simulatora leta sprema informacije o avionu u svoju kolekciju letova. Ako ne postoji avion,
+on se samo dodaje u kolekciju letova. Ako postoji avion i on je sletio (trenutno vrijeme je veće od
+vremena sljetanja) tada se stari podaci brišu. Ako avion još leti (trenutno vrijeme je manje od
+vremena sljetanja) vraća se odgovor ERROR 21; tekst; (tekst objašnjava razlog pogreške). Ako je
+došlo do nekog drugog problema vraća se ERROR 22; tekst; (tekst objašnjava razlog pogreške).
+Ako je sve u redu, vraća odgovor OK;.
+- POZICIJA: icao24;
+◦ server simulatora leta čita informacije o letu aviona. Ako postoje u kolekciji i avion još leti vraća
+OK; LETI; Ako je sletion vraća OK; SLETIO; Ako je došlo do problema vraća se ERROR 23; tekst;
+(tekst objašnjava razlog pogreške).
+
+
+Pokretanje serverskog programa sadrži naziv klase i jedan parametar:
+ServerAviona datoteka[.txt | .xml | .bin | .json] –-brojDretvi
+
+Serverski program za rad s avionima na početku provjerava postoji li datoteka konfiguracije te prekida rad
+ako ne postoji. Ako postoji, učitava postavke iz datoteke konfiguracije. Slijedi provjera da li su zauzeta zadana
+računalna vrata/port (postavka port.avioni). Ako su zauzeta, potrebno je ispisati poruku na konzolu i
+prekinuti rad programa. Ako nisu zauzeta, provjerava se da li postoji datoteka sa podacima o korisnicima
+(postavka datoteka.korisnika) i datoteka sa podacima o aerodromima (postavka datoteka.aerodromi), ako ne
+postoji ili sadrži podatke u pogrešnom formatu potrebno je ispisati odgovarajuću poruku na konzolu i
+prekinuti rad programa.
+Ako je sve u redu, server kreira objekt za kolekciju korisnika i objekt za kolekciju aerodroma i puni ih sa
+podacima iz odgovarajuće datoteke. Nakon toga server provjerava da li postoji datoteka sa serijaliziranim
+podacima aviona (postavka datoteka.avioni) te ju učitava ako postoji. Ako ne postoji, ispisuje informaciju na
+konzolu i nastavlja rad. Ako postoji ispisuje učitane avione (naziv aviona, aerodroma, vremena poljetanja i
+sljetanja) na konzolu i nastavlja rad.
+Serverski program uspostavlja početno stanje na temelju postavki. Server kreira grupu dretvi pod nazivom
+{LDAP_korisničko_ime}_SD (SD = servisna dretva) koja služi za obavljanje serijalizacije i drugih servisnih
+poslova sustava. Za dretve iz te grupe mogu se koristiti klasa Timer, TimerTask i druge izvedene klase za
+upravljanje dretvama i sl. Nazivi dretvi dobiju se temeljem naziva grupe iza kojeg slijedi _{brojDretve}, gdje
+brojDretve predstavlja redni broj u grupi dretvi dobiven tijekom njenog kreiranja.
+Potrebno je odabrati prikladnu klasu i kreirati objekt za kolekciju dretvi koje će biti u grupi dretvi. Prva SD
+zadužena je u svakom ciklusu za serijalizaciju podataka o avionima. Njen rad određen je postavkom
+interval.pohrane.aviona kojom se određuje pravilno vrijeme pokretanja ciklusa dretve. Postupak serijalizacije
+mora se provoditi međusobno isključivo u odnosu na druge dretve koje upisuju podatke o avionima.
+Sljedeći korak je priprema za prijem zahtjeva korisnika. Prvo je potrebno odabrati prikladnu klasu i kreirati
+objekt za kolekciju dretvi koje će obrađivati zahtjeve korisnika. Slijedi kreiranje objekta klase ServerSocket na
+zadanim računalnim vratima/port-u (postavka port.avioni) s maksimalnim brojem zahtjeva na čekanju
+(postavka maks.cekaca). Zatim se u petlji čeka da se spoji korisnik. Izlaz iz petlje dobije se komandom za kraj
+rada. Nakon spajanja korisnika, ako ima raspoložive dretve (broj aktivnih dretvi manji je od vrijednosti
+parametra brojDretvi) kreira novu dretvu koju dodaje u kolekciju i povećava broj aktivnih dretvi. Ukoliko
+nema raspoložive dretve, korisniku se vraća odgovor ERROR 01; tekst; (tekst objašnjava razlog pogreške).
+Ako ima raspoložive dretve, prosljeđuje joj se zahtjev korisnika. Dretva iz dobivene veze na mrežnoj
+utičnici/socket-u preuzima tokove za ulazne i izlazne podatke prema korisniku. Na temelju ulaznih podataka
+provodi se analiza zahtjeva korisnika. Dozvoljene komande opisane su u posebnom dijelu. Ako sintaksa
+primljenog zahtjeva nije ispravna tada se korisniku vraća odgovor ERROR 02; tekst; (tekst objašnjava razlog
+pogreške). Prilikom primitka svake komande korisnik se mora autenticirati. Dretva provjerava postoji li
+korisnik i njemu pridružena lozinka u kolekciji korisnika. Ako postoji, izvršava se dobivena komanda (opisana
+u posebnom dijelu). Kada nije u redu korisnik ili lozinka ne odgovara, vraća se odgovor ERROR 03; tekst;
+(tekst objašnjava razlog pogreške). Server u slučaju primljene komande za završetak rada ili prekida rada od
+strane korisnika (Ctrl/C) ili sustava, treba obaviti serijalizaciju podataka o avionima prije stvarnog završetka
+rada. Dretva kada završi svoj rad smanjuje broj aktivnih dretvi te se briše iz kolekcije dretvi.
+Server za rad s avionima može primiti sljedeće komande od svog korisnika koji traži izvršavanja određene
+akcije:
+- KORISNIK korisnik; LOZINKA lozinka; KRAJ;
+o prekida prijem komandi i čeka da aktivne dretve završe s radom, serijalizira avione i završava
+rad. Korisniku se vraća odgovor OK;. Ako nešto nije u redu s prekidom rada ili serijalizacijom
+vraća se odgovor ERROR 11; tekst; (tekst objašnjava razlog pogreške).
+- KORISNIK korisnik; LOZINKA lozinka; DODAJ n;
+o povećava maksimalni broj dretvi za n. Korisniku se vraća odgovor OK;. Ako nešto nije u redu s
+kreiranjem novih dretvi vraća se odgovor ERROR 12; tekst; (tekst objašnjava razlog pogreške).
+- KORISNIK korisnik; LOZINKA lozinka; UZLETIO icao24; POLAZIŠTE
+icaoP; ODREDIŠTE icaoO; TRAJANJE trajanjeLetaSekunde;
+o čitaju se podaci o aerodromu polazišta i aerodromu odredišta. Ukoliko nije u redu s podacima
+aerodroma (npr. aerodrom ne postoji i sl.) vraća se odgovor ERROR 13; tekst; (tekst
+objašnjava razlog pogreške). Slijedi čitanje podataka aviona. Ako avion ne postoji dodaju se
+informacije u kolekciju aviona (vrijeme polijetanja jednako je trenutnom vremeno dok se
+vrijeme slijetanja izračunava na temelju dobivenog podatka trajanjeLetaSekunde i vremena
+polijetanja). Ako avion postoji i ako nisu isti podaci aoredroma odredišta i polazišta javlja se
+greška (ERROR 14; tekst; (tekst objašnjava razlog pogreške)). Ako avion postoji i podaci
+aerodroma su isti ili je dodan novi avion, šalje se komanda LET na server simulatora leta. Ako
+se od servera za simulator leta dobije odgovor OK; korisniku se vraća odgovor OK;
+UDALJENOST d; gdje je d udaljenost između dva aerodroma (cjelobrojna vrijednost). Ako je u
+odgovoru od servera simulatora leta dobiven ERROR, vraća se odgovor ERROR 15; tekst;
+(tekst objašnjava razlog pogreške).
+- KORISNIK korisnik; LOZINKA lozinka; ISPIS icao24;
+o dohvaća informacije o avionu u kolekciji i zatim šalje komandu POZICIJA na server simulatora
+leta. Ako se od servera za simulator leta dobije odgovor koji započinje s OK; korisniku se
+prosljeđuje primljeni odgovor. Ako postoji problem (npr. nema aviona) vraća se odgovor
+ERROR 16; tekst; (tekst objašnjava razlog pogreške).
+
+
+Pokretanje korisničkog programa sadrži naziv klase i parametre:
+KorisnikAviona -k korisnik -l lozinka -s [ipadresa | adresa] -p port
+[--kraj | --dodajDretve n | --uzletio "AerodromPolazište:
+icaoP, AerodromOdredište: icaoO, Avion: icao24, trajanjeLeta: s"
+| --ispis icao24 ]
+
+Dozvoljene vrijednost za opcije:
+- korisnik (min 3, maks 10 znakova) može sadržavati mala i velika slova, brojeve i znakove: _, -
+- lozinka (min 3, maks 10 znakova) može sadržavati mala i velika slova, brojeve i znakove: -, #, !
+- ipadresa je adresa IPv4 (npr. 127.0.0.1, 192.168.15.1)
+- adresa je opisni naziv poslužitelja (npr. localhost, dkermek.nwtis.foi.hr)
+- port može biti u intervalu između 9000 i 9999
+- n je broj dretvi i može biti u intervalu između 1 i 20
+- icao24 je ICAO24 kod aviona (npr. AVION-3c4b2e)
+- icaoP i icaoO su ICAO kod aerodroma (npr. LDZA, JFK, EDDF)
+- s je vrijeme trajanja leta u sekundama
+Korisnički program može se izvršavati više puta kako bi se koristili različiti načini rada na bazi parametara.
+Izvršavanje korisničkog programa započinje utvrđivanjem vrste rada na bazi opcija u parametarima.
+Komunikacija korisničkog programa i servera temelji se na jednostavnom protokolu koji ima određenu
+sintaksu, a sadrži skup komandi. Komande i njihova sintaksa objašnjeni su ranije. Logično je da se prvo
+pokreće server, a nakon njega korisnici s različitim parametrima. Komunikaciju otvara korisnik tako da šalje
+zahtjev serveru u obliku određene komande. Ukoliko je server ugašen mora se ispisati odgovarajuća
+informacija na konzolu. Ako server radi on provodi analizu primljenog zahtjeva i ako je zahtjev u redu provodi
+određenu operaciju te vraća status operacije i ostale potrebne podatke. Kada zahtjev nije u redu, vraća
+primjereni status operacije. Kontrola parametara treba se obaviti u posebnim funkcijama unutar klase koja je
+zadužena za program.
+Korisnik servera za rad s avionima spaja se na server putem mrežne utičnice/socket-a i šalje komandu
+serveru na temelju upisanih parametara i traži izvršavanja određene akcije:
+- upisan parametar --kraj – šalje se komanda:
+KORISNIK korisnik; LOZINKA lozinka; KRAJ;
+- upisan parametar --dodajDretve n – šalje se komanda:
+KORISNIK korisnik; LOZINKA lozinka; DODAJ n;
+- upisan parametar --uzletio "AerodromPolazište: icaoP, AerodromOdredište: icaoO, Avion: icao24,
+trajanjeLeta: s" - šalje se komanda
+KORISNIK korisnik; LOZINKA lozinka; UZLETIO icao24; POLAZIŠTE
+icaoP; ODREDIŠTE icaoO; TRAJANJE s;
+- upisan parametar –-ispis icao24 – šalje se komanda:
+KORISNIK korisnik; LOZINKA lozinka; ISPIS icao24;
+Opisi komandi nalaze se u opisu servera za rad s avionima
