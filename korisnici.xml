@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>ppletes</comment>
+<entry key="admin">foi</entry>
+<entry key="ppletes">FOI_1234</entry>
+<entry key="matnovak">FOI_5678</entry>
+<entry key="dkermek">FOI_9101</entry>
+<entry key="aantunovic">FOI_1121</entry>
+<entry key="iivic">FOI_9145</entry>
+<entry key="kkarlic">FOI_3141</entry>
+<entry key="mmaric">FOI_5161</entry>
+</properties>

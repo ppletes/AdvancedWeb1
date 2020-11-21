@@ -1,0 +1,9 @@
+#ppletes
+#Fri Mar 27 15:26:41 CET 2020
+datoteka.korisnici=korisnici.xml
+datoteka.aerodromi=aerodromi.csv
+datoteka.avioni=avioni.bin
+port.simulator=8000
+interval.pohrane.aviona=30
+maks.cekaca=5
+port.avioni=9999
